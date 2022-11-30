@@ -6,8 +6,11 @@ import * as glob from 'glob';
 import * as bodyParser from 'body-parser';
 import * as chokidar from 'chokidar';
 import * as multer from 'multer';
-import analyzeDenpendencies from './analyzeMockDeps';
+import * as debounce from 'lodash.debounce';
+import { register } from 'esbuild-register/dist/node';
 import matchPath from './matchPath';
+
+type IIgnoreFolders = string[];
 
 const debug = require('debug')('ice:mock');
 const chalk = require('chalk');
@@ -21,26 +24,17 @@ let error = null;
 const cwd = process.cwd();
 const mockDir = winPath(path.join(cwd, 'mock'));
 
-function getConfig(rootDir) {
+function getConfig(rootDir: string, ignore: IIgnoreFolders) {
   // get mock files
   const mockFiles = glob.sync('mock/**/*.[jt]s', {
     cwd: rootDir,
+    ignore,
   }).map(file => path.join(rootDir, file));
-  
-  const requireDeps = mockFiles.reduce((pre, curr) => {
-    return pre.concat(analyzeDenpendencies(curr));
-  }, []);
-  const onlySet = Array.from(new Set([...requireDeps, ...mockFiles]));
-  // set @babel/register for node's require
-  // eslint-disable-next-line global-require
-  require('@babel/register')({
-    presets: [require.resolve('./babelPresetNode')],
-    ignore: [/node_modules/],
-    only: onlySet,
-    extensions: ['.js', '.ts'],
-    babelrc: false,
-    cache: false,
+  const { unregister } = register({
+    target: ['node12'],
+    hookIgnoreNodeModules: true,
   });
+  
   const mockConfig = {};
   mockFiles.forEach(mockFile => {
     if (fse.existsSync(mockFile)) {
@@ -63,6 +57,8 @@ function getConfig(rootDir) {
       }
     }
   });
+  // revert require hook after requiring all mock files
+  unregister();
   return mockConfig;
 }
 
@@ -76,9 +72,9 @@ function logWatchFile(event, filePath) {
   }
 }
 
-function applyMock(app) {
+function applyMock(app, ignore: IIgnoreFolders = []) {
   try {
-    realApplyMock(app);
+    realApplyMock(app, ignore);
     error = null;
   } catch (e) {
     console.log(e);
@@ -94,18 +90,18 @@ function applyMock(app) {
     watcher.on('all', (event, path) => {
       logWatchFile(event, path);
       watcher.close();
-      applyMock(app);
+      applyMock(app, ignore);
     });
   }
 }
 
-function realApplyMock(app) {
+function realApplyMock(app, ignore: IIgnoreFolders) {
   let mockConfig = [];
 
   function parseMockConfig() {
     const parsedMockConfig = [];
 
-    const config = getConfig(cwd);
+    const config = getConfig(cwd, ignore);
     Object.keys(config).forEach(key => {
       const handler = config[key];
       assert(
@@ -127,9 +123,13 @@ function realApplyMock(app) {
     ignored: /node_modules/,
     persistent: true,
   });
+  // use debounce to avoid too much file change events
+  const updateMockConfig = debounce(() => {
+    mockConfig = parseMockConfig();
+  }, 300);
   watcher.on('all', (event, path) => {
     logWatchFile(event, path);
-    mockConfig = parseMockConfig();
+    updateMockConfig();
   });
 
   app.use((req, res, next) => {
@@ -191,8 +191,11 @@ function createHandler(method, path, handler) {
         multer().any()(req, res, () => {
           handler(req, res, next);
         });
-      } else {
+      } else if (res.json) {
         res.json(handler);
+      } else {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(handler));
       }
     }
   };

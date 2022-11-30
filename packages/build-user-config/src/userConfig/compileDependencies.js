@@ -1,4 +1,4 @@
-const { MINIAPP, WECHAT_MINIPROGRAM, BYTEDANCE_MICROAPP } = require('../config/constants');
+const { formatPath } = require('@builder/app-helpers');
 
 const defaultCompileDependencies = [
   'ansi-regex',
@@ -8,14 +8,21 @@ const defaultCompileDependencies = [
   'react-dev-utils',
   'split-on-first',
   'strict-uri-encode',
-  'strip-ansi'
+  'strip-ansi',
 ];
+
+/**
+ * Exclude the core-js for that it will fail to run in IE
+ * @swc/helpers and @babel/runtime have been es5
+ */
+const skipDependenciesRegx = [/core-js/, /@swc\/helpers/, /@babel\/runtime/];
+
 module.exports = (config, compileDependencies) => {
   const matchExclude = (filepath) => {
-    if ([MINIAPP, WECHAT_MINIPROGRAM, BYTEDANCE_MICROAPP].includes(config.taskName)) return false;
-    // exclude the core-js for that it will fail to run in IE
-    if (filepath.match(/core-js/))
-      return true;
+    filepath = formatPath(filepath);
+
+    if (skipDependenciesRegx.some((regx) => filepath.match(regx))) return true;
+
     // compile build-plugin module for default
     const deps = [/build-plugin.*module/].concat(defaultCompileDependencies, compileDependencies).map(dep => {
       if (dep instanceof RegExp) {
@@ -23,7 +30,7 @@ module.exports = (config, compileDependencies) => {
       } else if (typeof dep === 'string') {
         // add default node_modules
         const matchStr = `node_modules/?.+${dep}/`;
-        return process.platform === 'win32' ? matchStr.replace(/\//g, '\\\\') : matchStr;
+        return matchStr;
       }
       return false;
     }).filter(Boolean);
@@ -36,10 +43,12 @@ module.exports = (config, compileDependencies) => {
     return /node_modules/.test(filepath);
   };
 
-  ['jsx', 'tsx'].forEach((rule) => {
-    config.module
+  ['jsx', 'tsx', 'swc-tsx', 'swc-jsx'].forEach((rule) => {
+    if (config.module.rules.get(rule)) {
+      config.module
       .rule(rule)
       .exclude.clear()
       .add(matchExclude);
+    }
   });
 };

@@ -4,7 +4,7 @@ const parse = require('yargs-parser');
 const chokidar = require('chokidar');
 const detect = require('detect-port');
 const path = require('path');
-const log = require('@alib/build-scripts/lib/utils/log');
+const log = require('build-scripts/lib/utils/log');
 
 let child = null;
 const rawArgv = parse(process.argv.slice(2));
@@ -54,6 +54,10 @@ function restartProcess(forkChildProcessPath) {
     const nProcessArgv = process.argv.slice(2).filter((arg) => arg.indexOf('--inspect') === -1);
     child = fork(forkChildProcessPath, nProcessArgv, { execArgv: argv });
     child.on('message', data => {
+      if (data && data.type === 'RESTART_DEV') {
+        child.kill();
+        restartProcess(forkChildProcessPath);
+      }
       if (process.send) {
         process.send(data);
       }

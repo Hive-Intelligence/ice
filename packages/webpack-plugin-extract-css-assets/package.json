@@ -1,17 +1,18 @@
 {
   "name": "extract-css-assets-webpack-plugin",
   "description": "Extract network resources in css",
-  "version": "0.2.8",
+  "version": "0.2.10",
   "main": "lib/cjs.js",
   "directories": {
     "test": "test"
   },
   "files": [
-    "lib/"
+    "lib/",
+    "!lib/**/*.map"
   ],
   "repository": {
     "type": "http",
-    "url": "https://github.com/ice-lab/ice-scripts/tree/master/packages/extract-css-assets-webpack-plugin"
+    "url": "https://github.com/alibaba/ice/tree/master/packages/webpack-plugin-extract-css-assets"
   },
   "keywords": [
     "webpack",
@@ -27,6 +28,6 @@
     "postcss": "^7.0.32",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
-    "webpack-sources": "^1.1.0"
+    "webpack-sources": "^2.0.0"
   }
 }

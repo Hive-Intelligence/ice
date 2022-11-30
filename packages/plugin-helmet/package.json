@@ -1,6 +1,6 @@
 {
   "name": "build-plugin-helmet",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "builtin helmet in icejs",
   "author": "ice-admin@alibaba-inc.com",
   "homepage": "",
@@ -11,18 +11,19 @@
     "test": "__tests__"
   },
   "files": [
-    "lib"
+    "lib",
+    "!lib/**/*.map"
   ],
   "dependencies": {
     "react-helmet": "^6.1.0"
   },
   "devDependencies": {
-    "@alib/build-scripts": "^0.1.24",
+    "build-scripts": "^1.1.0",
     "typescript": "^4.0.0"
   },
   "repository": {
-    "type": "git",
-    "url": "git@github.com:alibaba/ice.git"
+    "type": "http",
+    "url": "https://github.com/alibaba/ice/tree/master/packages/plugin-helmet"
   },
   "scripts": {
     "test": "echo \"Error: run tests from root\" && exit 1"

@@ -1,5 +1,10 @@
 const { validation } = require('@builder/app-helpers');
 
+const watchIgnoredRegexp = process.env.RUNTIME_DEBUG ? /node_modules/ : /node_modules|[/\\]\.ice[/\\]|[/\\]\.rax[/\\]/;
+const sockHost = process.env.WDS_SOCKET_HOST;
+const sockPath = process.env.WDS_SOCKET_PATH; // default: '/ws'
+const sockPort = process.env.WDS_SOCKET_PORT;
+
 module.exports = [
   {
     name: 'alias',
@@ -37,34 +42,57 @@ module.exports = [
     defaultValue: [ 'node_modules' ]
   },
   {
+    name: 'watchOptions',
+    validation: 'object',
+    defaultValue: {
+      ignored: watchIgnoredRegexp,
+    }
+  },
+  {
     name: 'devServer',
     validation: 'object',
     defaultValue: {
-      disableHostCheck: true,
-      compress: true,
-      transportMode: 'ws',
-      logLevel: 'silent',
-      clientLogLevel: 'none',
-      hot: true,
-      publicPath: '/',
-      quiet: false,
-      watchOptions: {
-        ignored: /node_modules/,
-        aggregateTimeout: 600,
+      allowedHosts: 'all',
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*',
       },
-      before(app) {
-        app.use((req, res, next) => {
-          // set cros for all served files
-          res.set('Access-Control-Allow-Origin', '*');
-          next();
-        });
+      compress: true,
+      webSocketServer: 'ws',
+      devMiddleware: {
+        publicPath: '/',
+      },
+      static: {
+        watch: {
+          ignored: watchIgnoredRegexp,
+        }
+      },
+      client: {
+        overlay: {
+          errors: true,
+          warnings: false, // overlay only shows error
+        },
+        logging: 'info', 
+        webSocketURL: {
+          // Enable custom sockjs pathname for websocket connection to hot reloading server.
+          // Enable custom sockjs hostname, pathname and port for websocket connection
+          // to hot reloading server.
+          hostname: sockHost,
+          pathname: sockPath,
+          port: sockPort,
+        },
       },
     }
   },
   {
     name: 'mock',
-    validation: 'boolean',
-    defaultValue: true
+    validation: (val) => {
+      return validation('sourceMap', val, 'object|boolean');
+    },
+    defaultValue: {
+      exclude: ['**/excludeMock/**'],
+    },
   },
   {
     name: 'externals',
@@ -80,7 +108,8 @@ module.exports = [
   },
   {
     name: 'minify',
-    validation: 'boolean'
+    validation: 'boolean|string|object',
+    defaultValue: 'terser',
   },
   {
     name: 'outputAssetsPath',
@@ -104,9 +133,7 @@ module.exports = [
   },
   {
     name: 'browserslist',
-    validation: (val) => {
-      return validation('browserslist', val, 'string|object');
-    },
+    validation: 'array|string|object',
     defaultValue: 'last 2 versions, Firefox ESR, > 1%, ie >= 9, iOS >= 8, Android >= 4'
   },
   {
@@ -135,12 +162,9 @@ module.exports = [
   },
   {
     name: 'sourceMap',
-    validation: 'boolean'
-  },
-  {
-    name: 'terserOptions',
-    validation: 'object',
-    defaultValue: {}
+    validation: (val) => {
+      return validation('sourceMap', val, 'string|boolean');
+    },
   },
   {
     name: 'cssLoaderOptions',
@@ -181,22 +205,13 @@ module.exports = [
     name: 'eslint',
     validation: (val) => {
       return validation('eslint', val, 'boolean|object');
-    }
+    },
+    defaultValue: false,
   },
   {
     name: 'tsChecker',
     validation: 'boolean',
     defaultValue: false
-  },
-  {
-    name: 'dll',
-    validation: 'boolean',
-    defaultValue: false
-  },
-  {
-    name: 'dllEntry',
-    validation: 'object',
-    defaultValue: {}
   },
   {
     name: 'polyfill',
@@ -224,5 +239,16 @@ module.exports = [
   {
     name: 'modularImportRuntime',
     validation: 'boolean',
+    defaultValue: true,
+  },
+  {
+    name: 'swc',
+    defaultValue: false,
+    validation: 'boolean|object',
+  },
+  {
+    name: 'experiments',
+    validation: 'object',
+    defaultValue: {},
   }
 ];

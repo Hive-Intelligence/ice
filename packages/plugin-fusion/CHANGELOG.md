@@ -1,5 +1,56 @@
 # Changelog
 
+## 0.1.23
+
+- [fix] return sourceMap with custom loader of `unicodeLoader`
+
+## 0.1.22
+
+- [fix] remove alias config of `~` for vite
+
+## 0.1.21
+
+- [feat] option `disableModularImport` for disable modular import of `@alifd/next`
+
+## 0.1.20
+
+- [fix] icon path in win32
+
+## 0.1.19
+
+- [fix] theme icon in vite mode
+
+## 0.1.18
+
+- [feat] support style import in mode vite
+
+## 0.1.17
+
+- [fix] compatible with umd and other targets.
+
+## 0.1.16
+
+- [fix] compatible with umd export when external Next
+
+## 0.1.15
+
+- [fix] remove useless string in calculated colors
+- [chore] remove err stack when config slient
+
+## 0.1.14
+
+- [feat] support `cssVariable` to enable css variables
+
+## 0.1.13
+
+- [fix] bump dependencies version
+- [feat] auto detect sass implementation
+- [feat] external next styles imported by depended components
+
+## 0.1.12
+
+- [feat] compatible with webpack 5
+
 ## 0.1.11
 
 - [fix] error condition of color variables

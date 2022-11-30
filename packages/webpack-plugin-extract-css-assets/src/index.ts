@@ -12,6 +12,7 @@ class ExtractCssAssetsPlugin {
       {
         outputPath: '',
         relativeCssPath: '',
+        forceLocal: false,
         requsetOptions: {
           timeout: 5000,
         },
@@ -34,6 +35,7 @@ class ExtractCssAssetsPlugin {
             if (filename.endsWith('.css')) {
               const css = asset.source();
               return new Promise<void>((resolve) => {
+                // @ts-ignore
                 postcss()
                   .use(
                     // @ts-ignore

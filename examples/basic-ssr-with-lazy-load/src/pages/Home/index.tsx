@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, logger, Helmet, store as appStore } from 'ice';
+import { Link, Head } from 'ice';
+import appStore from '@/store';
 import pageStore from './store';
 import styles from './index.module.scss';
 
 export default function Home(props) {
-  logger.info('Home props', props);
+  console.info('Home props', props);
 
   const [dataSource, setData] = useState<number[]>([]);
   useEffect(() => {
@@ -18,12 +19,12 @@ export default function Home(props) {
 
   return (
     <main>
-      <Helmet>
+      <Head>
         <meta charSet="utf-8" />
         <title>{props.title}</title>
         <meta name="keywords" content={props.keywords} />
         <meta name="description" content={props.description} />
-      </Helmet>
+      </Head>
       <h2 className={styles.title}>{props.title}</h2>
       <div>counterState: {counterState.count}</div>
       <div>name: {userState.name}</div>
@@ -35,21 +36,3 @@ export default function Home(props) {
     </main>
   );
 }
-
-Home.getInitialProps = async () => {
-  // const res = await request('/profile');
-  const res = {
-    data: {
-      profile: {
-        id: 10001,
-        name: 'Jack Ma',
-        edu: 'Hangzhou Normal University',
-        address: 'Hangzhou'
-      },
-      title: 'Home Page...',
-      content: 'Home Content...',
-      description: 'Home Description...'
-    }
-  };
-  return { ...res.data, title: 'Home Page...' };
-};

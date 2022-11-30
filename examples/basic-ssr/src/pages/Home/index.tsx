@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link, logger, Helmet, store as appStore } from 'ice';
+import { Link, Head } from 'ice';
+import appStore from '@/store';
 import pageStore from './store';
 import styles from './index.module.scss';
 
-export default function Home(props) {
-  logger.info('Home props', props);
+function Home(props) {
+  if (!process.env.__IS_SERVER__) {
+    console.info('Home props', props);
+  }
 
   const [dataSource, setData] = useState<number[]>([]);
   useEffect(() => {
@@ -17,13 +20,13 @@ export default function Home(props) {
   const [counterState] = pageStore.useModel('counter');
 
   return (
-    <main>
-      <Helmet>
+    <main className={styles.main}>
+      <Head>
         <meta charSet="utf-8" />
         <title>{props.title}</title>
         <meta name="keywords" content={props.keywords} />
         <meta name="description" content={props.description} />
-      </Helmet>
+      </Head>
       <h2 className={styles.title}>{props.title}</h2>
       <div>counterState: {counterState.count}</div>
       <div>name: {userState.name}</div>
@@ -56,3 +59,5 @@ Home.getInitialProps = async () => {
 
   return { ...res.data, title: 'Home Page...' };
 };
+
+export default Home;

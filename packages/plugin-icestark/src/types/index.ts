@@ -3,7 +3,10 @@ import { IGetApps, IAppRouter } from './base';
 
 export { CompatibleAppConfig as IStarkAppConfig } from '@ice/stark/lib/AppRoute';
 export interface IIceStark {
-  type: 'framework' | 'child';
+  /**
+   * @deprecated use `build-plugin-icestark`'s option `type` instead.
+   */
+  type?: 'framework' | 'child';
   getApps?: IGetApps;
   appRouter?: IAppRouter;
   removeRoutesLayout?: boolean;
@@ -11,4 +14,12 @@ export interface IIceStark {
   Layout?: React.ComponentType;
   registerAppEnter?: (mountNode: HTMLElement, App: React.ComponentType, resolve: (value?: unknown) => void) => void;
   registerAppLeave?: (mountNode: HTMLElement) => void;
+
+}
+
+export interface IPrivateIceStark extends IIceStark {
+  $$props: {
+    container?: HTMLElement;
+    customProps?: object;
+  };
 }
